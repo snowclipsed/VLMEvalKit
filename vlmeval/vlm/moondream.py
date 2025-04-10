@@ -10,6 +10,21 @@ from ..dataset import DATASET_TYPE
 import copy
 
 
+def extract_object(sentence: str) -> str:
+    # Split the sentence into words.
+    words = sentence.split()
+    
+    # Starting from the third word (index 2)
+    obj_words = []
+    for word in words[2:]:
+        # Stop if we encounter "are" or "is" (case-insensitive)
+        if word.lower() in {"are", "is"}:
+            break
+        obj_words.append(word)
+        
+    # Join and return the collected words as a string.
+    return " ".join(obj_words)
+
 class Moondream1(BaseModel):
     INSTALL_REQ = False
     INTERLEAVE = False
@@ -103,7 +118,7 @@ class Moondream2(BaseModel):
     INSTALL_REQ = False
     INTERLEAVE = False
 
-    def __init__(self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
+    def __init__(self, model_path="vikhyatk/moondream2", revision=None, local_path=None, **kwargs):
         try:
             from transformers import AutoModelForCausalLM, AutoTokenizer
         except Exception as e:
@@ -122,6 +137,16 @@ class Moondream2(BaseModel):
             device_map={"": "cuda"},
             revision=revision,
         )
+        
+        if local_path:
+            self.model.load_state_dict(
+                {
+                    k.replace("._orig_mod", "").replace(".w.weight", ".weight"): v
+                    for k, v in torch.load(
+                        local_path, map_location="cuda", weights_only=True
+                    ).items()
+                },
+            )
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
@@ -137,8 +162,9 @@ class Moondream2(BaseModel):
         enc_image = self.model.encode_image(Image.open(img))
         print(f"prompt for {dataset} -> ", prompt)
 
-        answer = self.model.query(enc_image, prompt)["answer"]
-        cleaned_answer = answer.strip()
+        #answer = self.model.query(enc_image, prompt)["answer"]
+        answer = len(self.model.point(enc_image, prompt)["points"])
+        cleaned_answer = answer#answer.strip()
 
         return cleaned_answer
 
@@ -185,14 +211,16 @@ class Moondream2(BaseModel):
             prompt = question + " The answer should be a short text span taken verbatim from the document."
         elif dataset == "POPE":
             prompt = f"{question}\nAnswer yes or no."
-        elif dataset == "RealWorldQA":
-            prompt = question
-        elif dataset == "TallyQA" or dataset == "CountbenchQA":
+        # elif dataset == "RealWorldQA":
+        #     prompt = question
+        elif dataset == "TallyQA":# or dataset == "CountbenchQA":
             prompt = (
                 "Look at the image carefully and count the objects. "
                 "Answer with just a number, without any additional text. "
                 + question
             )
+        elif dataset == "CountbenchQA":
+            prompt = "(coco) " + extract_object(question)
 
         elif dataset == "MMVet":
             prompt = question + "\nAnswer the question directly. "
