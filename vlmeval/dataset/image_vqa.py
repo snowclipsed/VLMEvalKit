@@ -2275,39 +2275,6 @@ class TDBenchGrounding(ImageVQADataset):
         msgs.append(dict(type='text', value=question))
         return msgs
 
-
-class CountBenchQA(ImageVQADataset):
-    DATASET_URL = {
-        'CountBenchQA':
-        'https://opencompass.openxlab.space/utils/VLMEval/CountBenchQA.tsv'
-    }
-    DATASET_MD5 = {'CountBenchQA': 'f4f65f3fe57f0fd30ca67a3baae16b9d'}
-
-    def build_prompt(self, line):
-        if isinstance(line, int):
-            line = self.data.iloc[line]
-        tgt_path = self.dump_image(line)
-        msgs = []
-        msgs.extend([dict(type='image', value=p) for p in tgt_path])
-        ques = line['question']
-        question = f'{ques} Note that: answer with a number directly e.g. 3. Do not include any additional text.'
-        msgs.append(dict(type='text', value=question))
-        return msgs
-
-    def evaluate(self, eval_file, **judge_kwargs):
-        data = load(eval_file).sort_values(by='index')
-        predictions = [str(x) for x in data['prediction']]
-        answers = [str(x) for x in data['answers']]
-        correct_count = 0
-        total_count = len(predictions)
-
-        for pred, ans in zip(predictions, answers):
-            if ans in pred:
-                correct_count += 1
-        accuracy = correct_count / total_count if total_count > 0 else 0
-        return {'accuracy': accuracy}
-
-
 class OCR_Reasoning(ImageBaseDataset):
     TYPE = 'VQA'
     DATASET_URL = {
@@ -2571,3 +2538,61 @@ class PhyX(ImageBaseDataset):
             score_pth = storage.replace('.xlsx', '_score.csv')
             dump(score, score_pth)
             return score
+
+
+class CountbenchQA(ImageBaseDataset):
+    TYPE = 'VQA'
+    DATASET_URL = { #/home/ubuntu/LMUData/CountbenchQA.tsv
+        'CountbenchQA': 'https://huggingface.co/datasets/moondream/temp-VLMEvalKit-datasets/resolve/main/countbench_data.tsv'
+    }
+    DATASET_MD5 = {'CountbenchQA': 'c9853275a558ecf59a06c6cd2e44046a'}
+
+    from .utils.tablevqabench import FINTABNETQA_PROMPT, VTABFACT_PROMPT, VWTQ_PROMPT
+
+
+    # It returns a DataFrame
+    @classmethod
+    def evaluate(self, eval_file, **judge_kwargs):
+        import pandas as pd
+        from .utils.text2int import text2int
+
+        data = load(eval_file)
+        assert 'answer' in data and 'prediction' in data
+
+        # print(data[0]['prediction'])
+        # quit(0)
+        correct = 0
+        total = 0
+        score = 0
+
+        i = 0
+        for datapoint in data.to_dict('records'):
+            
+            i+=1
+            # Skip the samples that have a blank image
+            if i in [163, 263, 371]:
+                continue
+            
+            total += 1
+            if int(datapoint['answer']) == text2int(datapoint['prediction']):
+                correct += 1
+            print('a->',text2int(datapoint['prediction']))
+            
+        score = correct/total
+
+        suffix = eval_file.split('.')[-1]
+        result_file = eval_file.replace(f'.{suffix}', '_acc.csv')
+        score_dict = {'CountbenchQA': score}
+        df = pd.DataFrame([score_dict])
+        dump(df, result_file)
+
+
+        return df
+        # might need to be a dataframe
+
+    # TableVQABench adopts a custom prompt
+    def build_prompt(self, line):
+        msgs = super().build_prompt(line)
+        assert msgs[-1]['type'] == 'text'
+        msgs[-1]['value'] += '\nAnswer the question using a single number.'
+        return msgs

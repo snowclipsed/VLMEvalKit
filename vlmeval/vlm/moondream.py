@@ -103,7 +103,7 @@ class Moondream2(BaseModel):
     INSTALL_REQ = False
     INTERLEAVE = False
 
-    def __init__(self, model_path="vikhyatk/moondream2", revision="2025-01-09", **kwargs):
+    def __init__(self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
         try:
             from transformers import AutoModelForCausalLM, AutoTokenizer
         except Exception as e:
