@@ -1534,3 +1534,61 @@ class MMNIAH(ImageBaseDataset):
             if element['value'] == '':
                 msgs.remove(element)
         return msgs
+
+
+class CountbenchQA(ImageBaseDataset):
+    TYPE = 'VQA'
+    DATASET_URL = { #/home/ubuntu/LMUData/CountbenchQA.tsv
+        'CountbenchQA': 'https://huggingface.co/datasets/moondream/temp-VLMEvalKit-datasets/resolve/main/countbench_data.tsv'
+    }
+    DATASET_MD5 = {'CountbenchQA': 'c9853275a558ecf59a06c6cd2e44046a'}
+
+    from .utils.tablevqabench import FINTABNETQA_PROMPT, VTABFACT_PROMPT, VWTQ_PROMPT
+
+
+    # It returns a DataFrame
+    @classmethod
+    def evaluate(self, eval_file, **judge_kwargs):
+        import pandas as pd
+        from .utils.text2int import text2int
+
+        data = load(eval_file)
+        assert 'answer' in data and 'prediction' in data
+
+        # print(data[0]['prediction'])
+        # quit(0)
+        correct = 0
+        total = 0
+        score = 0
+
+        i = 0
+        for datapoint in data.to_dict('records'):
+            
+            i+=1
+            # Skip the samples that have a blank image
+            if i in [163, 263, 371]:
+                continue
+            
+            total += 1
+            if int(datapoint['answer']) == text2int(datapoint['prediction']):
+                correct += 1
+            print('a->',text2int(datapoint['prediction']))
+            
+        score = correct/total
+
+        suffix = eval_file.split('.')[-1]
+        result_file = eval_file.replace(f'.{suffix}', '_acc.csv')
+        score_dict = {'CountbenchQA': score}
+        df = pd.DataFrame([score_dict])
+        dump(df, result_file)
+
+
+        return df
+        # might need to be a dataframe
+
+    # TableVQABench adopts a custom prompt
+    def build_prompt(self, line):
+        msgs = super().build_prompt(line)
+        assert msgs[-1]['type'] == 'text'
+        msgs[-1]['value'] += '\nAnswer the question using a single number.'
+        return msgs
