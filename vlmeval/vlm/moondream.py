@@ -298,30 +298,14 @@ class Moondream2(BaseModel):
 
         assert osp.exists(model_path) or splitlen(model_path) == 2
 
-        # self.model = AutoModelForCausalLM.from_pretrained(
-        #     model_path,
-        #     trust_remote_code=True,
-        #     torch_dtype=torch.float16,
-        #     device_map={"": "cuda"},
-        #     # revision=revision,
-        # )
-        
-        # #if local_path:
-        # print("\n\n-------------------------!!!!!!About to load model!!")
+        self.model = AutoModelForCausalLM.from_pretrained(
+            "moondream/moondream-2b-2025-04-14-4bit",
+            trust_remote_code=True,
+            torch_dtype=torch.float16,
+            device_map={"": "cuda"},
+            # revision=revision,
+        )
 
-        # load_weights_into_model("/home/ubuntu/weights/model_qat.pt", self.model.model)
-
-
-        # print("\n\n-------------------------!!!!!!loaded model!!")
-
-        from .md.weights import load_weights_into_model
-        from .md.moondream import MoondreamConfig, MoondreamModel
-
-        config = MoondreamConfig()
-        self.model = MoondreamModel(config)  
-        load_weights_into_model("/home/ubuntu/weights/quantized.pt", self.model)  
-        self.model =self.model.to("cuda")
-        self.model.compile()     
 
         
         # from .config import MoondreamConfig
