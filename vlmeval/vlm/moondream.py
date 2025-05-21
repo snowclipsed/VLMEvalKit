@@ -299,11 +299,10 @@ class Moondream2(BaseModel):
         assert osp.exists(model_path) or splitlen(model_path) == 2
 
         self.model = AutoModelForCausalLM.from_pretrained(
-            "moondream/moondream-next",
+            "moondream/moondream-2b-2025-04-14-4bit",
             trust_remote_code=True,
             torch_dtype=torch.float16,
             device_map={"": "cuda"},
-            revision=revision,
         )
         
         # if local_path:
