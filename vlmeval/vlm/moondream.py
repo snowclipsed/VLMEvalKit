@@ -189,7 +189,7 @@ class Moondream2(BaseModel):
         tgt_path = self.dump_image(line, dataset)
         question = line["question"]
 
-        countbench_mode="point" # change this to "query" for CountbenchQA query mode. 
+        countbench_mode="point" # Change this to "query" for CountbenchQA query mode. 
         
         prompts = {
             "ChartQA_TEST": f"Analyze the chart carefully, consider both visual features and data values, and provide a precise answer without any additional explanation or formatting. {question}",
