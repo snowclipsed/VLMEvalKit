@@ -117,21 +117,20 @@ class Moondream1(BaseModel):
 class Moondream2(BaseModel):
     INSTALL_REQ = False
     INTERLEAVE = False
-    def __init__(self, model_path="moondream/moondream-2b-2025-04-14-4bit", revision=None, local_path=None, **kwargs):
+    def __init__(self, model_path="vikhyatk/moondream2", revision=None, local_path=None, **kwargs):
         try:
-        try:
-        import transformers
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        if transformers.__version__ < '4.44.0':
-            raise ImportError("Transformers 4.44+ required")
+            import transformers
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            if transformers.__version__ != '4.44.0':
+                raise ImportError("Transformers 4.44.0 required")
         except ImportError:
-            logging.critical("Install transformers>=4.44.0 and torchvision>=0.16")
+            logging.critical("Install transformers==4.44.0 and torchvision>=0.16")
             raise
-            
+                    
         assert osp.exists(model_path) or splitlen(model_path) == 2
 
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_path,
+            "moondream/moondream-2b-2025-04-14-4bit",
             trust_remote_code=True,
             torch_dtype=torch.float16,
             device_map={"": "cuda"},
@@ -190,7 +189,7 @@ class Moondream2(BaseModel):
         tgt_path = self.dump_image(line, dataset)
         question = line["question"]
 
-        countbench_mode="query" # change this to "query" for CountbenchQA query mode. 
+        countbench_mode="point" # change this to "query" for CountbenchQA query mode. 
         
         prompts = {
             "ChartQA_TEST": f"Analyze the chart carefully, consider both visual features and data values, and provide a precise answer without any additional explanation or formatting. {question}",
@@ -201,7 +200,7 @@ class Moondream2(BaseModel):
             "CountbenchQA_query": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
             "CountbenchQA_point": f"individual {extract_object(question)}",
             "RealWorldQA": f"Look at the image carefully and answer the question. Provide a brief answer without any additional text. {question}",
-            "MMVet": f"{question}\nAnswer the question directly. "
+            "MMVet": f"{question}\nAnswer the question directly."
         }
         
         if dataset == "CountbenchQA":
