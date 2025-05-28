@@ -145,6 +145,15 @@ class Moondream2(BaseModel):
         
 
     def generate_inner(self, message, dataset=None, countbench_mode="point"):
+        """
+        Generate an answer for the given message and dataset.
+        Args:
+            message (dict): The message containing the question and image.
+            dataset (str): The dataset for which the answer is being generated.
+            countbench_mode (str): The mode for CountbenchQA, either "point" or "query".
+        Returns:
+            str: The generated answer.
+        """
         prompt, img = self.message_to_promptimg(message)
         enc_image = self.model.encode_image(Image.open(img))
         # print(f"Prompt for {dataset} -> ", prompt)
