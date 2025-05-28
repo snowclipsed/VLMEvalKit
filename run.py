@@ -188,7 +188,6 @@ You can launch the evaluation by setting either --data and --model or --config.
     parser.add_argument('--reuse-aux', type=bool, default=True, help='reuse auxiliary evaluation files')
     parser.add_argument(
         '--use-vllm', action='store_true', help='use vllm to generate, the flag is only supported in Llama4 for now')
-    parser.add_argument("--local_path", default=None)
 
     args = parser.parse_args()
     return args
@@ -372,8 +371,7 @@ def main():
                         verbose=args.verbose,
                         api_nproc=args.api_nproc,
                         ignore_failed=args.ignore,
-                        use_vllm=args.use_vllm,
-                        local_path=args.local_path)
+                        use_vllm=args.use_vllm)
 
                 # Set the judge kwargs first before evaluation or dumping
 
