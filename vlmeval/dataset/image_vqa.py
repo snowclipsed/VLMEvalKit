@@ -2549,7 +2549,7 @@ class CountbenchQA(ImageBaseDataset):
 
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
-        from .utils.countbenchqa import safe_convert # This only counts from 0 to 20 since that is our scope.
+        from .utils.countbenchqa import safe_convert # This only counts from 0 to 20.
         
         data = load(eval_file)
 
