@@ -11,48 +11,6 @@ from ..smp import *
 from ..utils import track_progress_rich
 
 
-def int_from_string(text):
-
-    if type(text) == float:
-        if math.isnan(text):
-            return -1
-        else:
-            return int(text)
-        
-    if type(text) == int:
-        return int(text)
-        
-    # Dictionary for number words (1-20)
-    number_words = {
-        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
-        'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14,
-        'fifteen': 15, 'sixteen': 16, 'seventeen': 17, 'eighteen': 18,
-        'nineteen': 19, 'twenty': 20
-    }
-    
-    # Handle text numbers
-    text = text.lower().strip('.,!? ')
-    if text in number_words:
-        return number_words[text]
-    
-    # Handle digit numbers
-    current_number = ''
-    for char in text:
-        if char.isdigit():
-            current_number += char
-        elif current_number:
-            # If we've collected digits and hit a non-digit, we're done
-            return int(current_number)
-    
-    # Handle case where number is at the end of string
-    if current_number:
-        return int(current_number)
-    
-    # Return None if no number found
-    return None
-
-
 class ImageVQADataset(ImageBaseDataset):
     TYPE = 'VQA'
 
@@ -2583,58 +2541,34 @@ class PhyX(ImageBaseDataset):
 
 
 class CountbenchQA(ImageBaseDataset):
-    TYPE = 'VQA'
-    DATASET_URL = { #/home/ubuntu/LMUData/CountbenchQA.tsv
-        'CountbenchQA': 'https://huggingface.co/datasets/snowclipsed/CountBenchQA/resolve/main/countbench_data.tsv'
+    TYPE = "VQA"
+    DATASET_URL = {
+        "CountbenchQA": "https://huggingface.co/datasets/snowclipsed/CountBenchQA/resolve/main/countbench_data.tsv"
     }
-    DATASET_MD5 = {'CountbenchQA': 'd70123bd9d7c090b00101f2116f3a7c6'}
+    DATASET_MD5 = {"CountbenchQA": "d70123bd9d7c090b00101f2116f3a7c6"}
 
-    from .utils.tablevqabench import FINTABNETQA_PROMPT, VTABFACT_PROMPT, VWTQ_PROMPT
-
-
-    # It returns a DataFrame
-    @classmethod
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
-        from .utils.text2int import text2int
-
+        from .utils.countbenchqa import safe_convert
+        
         data = load(eval_file)
-        assert 'answer' in data and 'prediction' in data
 
-        # print(data[0]['prediction'])
-        # quit(0)
-        correct = 0
-        total = 0
-        score = 0
+        pred_ints = data["prediction"].apply(safe_convert)
+        answer_ints = data["answer"].astype(int)
+        
+        # Count correct predictions (excluding failed conversions)
+        correct = (pred_ints == answer_ints).sum()
+        total = len(data)
+        accuracy = correct / total
+        
+        result_df = pd.DataFrame([{"CountbenchQA": accuracy}])
+        result_file = eval_file.replace(f".{eval_file.split('.')[-1]}", "_acc.csv")
+        dump(result_df, result_file)
+        return result_df
 
-        i = 0
-        for datapoint in data.to_dict('records'):
-            
-            i+=1
-            print('i->', i)
-            
-            total += 1
-            if int(datapoint['answer']) == text2int(datapoint['prediction']):
-                correct += 1
-            print('a->',text2int(datapoint['prediction']))
-            
-        score = correct/total
-
-        suffix = eval_file.split('.')[-1]
-        result_file = eval_file.replace(f'.{suffix}', '_acc.csv')
-        score_dict = {'CountbenchQA': score}
-        df = pd.DataFrame([score_dict])
-        dump(df, result_file)
-
-
-        return df
-        # might need to be a dataframe
-
-    # TableVQABench adopts a custom prompt
     def build_prompt(self, line):
         msgs = super().build_prompt(line)
-        assert msgs[-1]['type'] == 'text'
-        msgs[-1]['value'] += '\nAnswer the question using a single number.'
+        msgs[-1]["value"] += "\nAnswer the question using a single number."
         return msgs
 
 class TallyQA(ImageBaseDataset):
@@ -2644,44 +2578,26 @@ class TallyQA(ImageBaseDataset):
     }
     DATASET_MD5 = {'TallyQA': '959df01cf1858e73a71efe5cd3b9bf19'}
 
-    from .utils.tablevqabench import FINTABNETQA_PROMPT, VTABFACT_PROMPT, VWTQ_PROMPT
-
-
-    # It returns a DataFrame
-    @classmethod
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
-        from .utils.text2int import text2int
-
+        from .utils.countbenchqa import safe_convert
+        
         data = load(eval_file)
-        assert 'answer' in data and 'prediction' in data
+        
+        pred_ints = data["prediction"].apply(safe_convert)
+        answer_ints = data["answer"].astype(int)
+        
+        # Count correct predictions (excluding failed conversions)
+        correct = (pred_ints == answer_ints).sum()
+        total = len(data)
+        accuracy = correct / total
+        
+        result_df = pd.DataFrame([{"TallyQA": accuracy}])
+        result_file = eval_file.replace(f".{eval_file.split('.')[-1]}", "_acc.csv")
+        dump(result_df, result_file)
+        return result_df
 
-
-        correct = 0
-        total = 0
-        score = 0
-
-
-        for datapoint in data.to_dict('records'):
-            total += 1
-            if int(datapoint['answer']) == text2int(datapoint['prediction']):
-                correct += 1
-            
-        score = correct/total
-
-        suffix = eval_file.split('.')[-1]
-        result_file = eval_file.replace(f'.{suffix}', '_acc.csv')
-        score_dict = {'TallyQA': score}
-        df = pd.DataFrame([score_dict])
-        dump(df, result_file)
-
-
-        return df
-        # might need to be a dataframe
-
-    # TableVQABench adopts a custom prompt
     def build_prompt(self, line):
         msgs = super().build_prompt(line)
-        assert msgs[-1]['type'] == 'text'
         msgs[-1]['value'] += '\nAnswer the question using a single number.'
         return msgs
