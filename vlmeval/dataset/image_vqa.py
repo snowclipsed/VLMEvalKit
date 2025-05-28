@@ -2567,7 +2567,6 @@ class CountbenchQA(ImageBaseDataset):
 
     def build_prompt(self, line):
         msgs = super().build_prompt(line)
-        print("msgs : ", msgs)
         msgs[-1]["value"] += "\nAnswer the question using a single number."
         return msgs
 
