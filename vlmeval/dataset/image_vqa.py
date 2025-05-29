@@ -2539,35 +2539,37 @@ class PhyX(ImageBaseDataset):
             dump(score, score_pth)
             return score
 
-class CountBenchQA(ImageBaseDataset):
+class CountBenchQA(ImageVQADataset):
     TYPE = "VQA"
     DATASET_URL = {
-        "CountBenchQA": "https://huggingface.co/datasets/moondream/CountBenchQA-VLMEvalKit/resolve/main/countbench_data.tsv"
+        "CountBenchQA": 
+        "https://huggingface.co/datasets/moondream/CountBenchQA-VLMEvalKit/resolve/main/countbench_data.tsv"
     }
     DATASET_MD5 = {"CountBenchQA": "d70123bd9d7c090b00101f2116f3a7c6"}
 
-    def evaluate(self, eval_file, **judge_kwargs):
-        import pandas as pd
-        from .utils.countbenchqa import extract_count_from_prediction
-        
-        data = load(eval_file)
-
-        pred_ints = data["prediction"].apply(extract_count_from_prediction)
-        answer_ints = data["answer"].astype(int)
-        
-        correct = (pred_ints == answer_ints).sum()
-        total = len(data)
-        accuracy = correct / total
-        
-        result_df = pd.DataFrame([{"CountBenchQA": accuracy}])
-        result_file = eval_file.replace(f".{eval_file.split('.')[-1]}", "_acc.csv")
-        dump(result_df, result_file)
-        return result_df
-
     def build_prompt(self, line):
-        msgs = super().build_prompt(line)
-        msgs[-1]["value"] += "\nAnswer the question using a single number."
+        if isinstance(line, int):
+            line = self.data.iloc[line]
+        tgt_path = self.dump_image(line)
+        msgs = []
+        msgs.extend([dict(type='image', value=p) for p in tgt_path])
+        ques = line['question']
+        question = f'{ques} Note that: answer with a number directly e.g. 3. Do not include any additional text.'
+        msgs.append(dict(type='text', value=question))
         return msgs
+
+    def evaluate(self, eval_file, **judge_kwargs):
+        data = load(eval_file).sort_values(by='index')
+        predictions = [str(x) for x in data['prediction']]
+        answers = [str(x) for x in data['answer']]
+        correct_count = 0
+        total_count = len(predictions)
+
+        for pred, ans in zip(predictions, answers):
+            if ans in pred:
+                correct_count += 1
+        accuracy = correct_count / total_count if total_count > 0 else 0
+        return {'accuracy': accuracy}
 
 class TallyQA(ImageBaseDataset):
     TYPE = 'VQA'
