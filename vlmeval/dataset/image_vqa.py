@@ -2539,7 +2539,6 @@ class PhyX(ImageBaseDataset):
             dump(score, score_pth)
             return score
 
-
 class CountBenchQA(ImageBaseDataset):
     TYPE = "VQA"
     DATASET_URL = {
