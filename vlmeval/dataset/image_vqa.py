@@ -2543,7 +2543,7 @@ class PhyX(ImageBaseDataset):
 class CountbenchQA(ImageBaseDataset):
     TYPE = "VQA"
     DATASET_URL = {
-        "CountbenchQA": "https://huggingface.co/datasets/snowclipsed/CountBenchQA/resolve/main/countbench_data.tsv"
+        "CountbenchQA": "https://huggingface.co/datasets/moondream/CountBenchQA-VLMEvalKit/resolve/main/countbench_data.tsv"
     }
     DATASET_MD5 = {"CountbenchQA": "d70123bd9d7c090b00101f2116f3a7c6"}
 
@@ -2573,7 +2573,7 @@ class CountbenchQA(ImageBaseDataset):
 class TallyQA(ImageBaseDataset):
     TYPE = 'VQA'
     DATASET_URL = { 
-        'TallyQA': 'https://huggingface.co/datasets/snowclipsed/TallyQA/resolve/main/tallyqa_data.tsv'
+        'TallyQA': 'https://huggingface.co/datasets/moondream/TallyQA-VLMEvalKit/resolve/main/tallyqa_data.tsv'
     }
     DATASET_MD5 = {'TallyQA': '959df01cf1858e73a71efe5cd3b9bf19'}
 
