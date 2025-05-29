@@ -150,8 +150,7 @@ class Moondream2(BaseModel):
         Args:
             message (dict): The message containing the question and image.
             dataset (str): The dataset for which the answer is being generated (optional, for context).
-            capability (str): The model capability to use - "point" or "query".
-        
+            
         Returns:
             str: The generated answer or count.
         """
@@ -193,7 +192,7 @@ class Moondream2(BaseModel):
             return True
         else:
             return False
-        
+
     def build_prompt(self, line, dataset=None):
         assert dataset is None or isinstance(dataset, str)
         assert self.use_custom_prompt(dataset)
