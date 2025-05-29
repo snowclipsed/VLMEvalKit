@@ -134,7 +134,7 @@ class Moondream2(BaseModel):
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-        self.capability = "point"  # Default capability, change to "point" if needed.
+        self.capability = "query"  # Default capability, change to "point" if needed.
 
         self.kwargs = {"max_new_tokens": 512, **kwargs}
 
