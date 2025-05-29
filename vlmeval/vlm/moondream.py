@@ -134,6 +134,8 @@ class Moondream2(BaseModel):
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
+        self.capability = "point"  # Default capability, change to "point" if needed.
+
         self.kwargs = {"max_new_tokens": 512, **kwargs}
 
         warnings.warn(
@@ -141,7 +143,7 @@ class Moondream2(BaseModel):
         )
         torch.cuda.empty_cache()
 
-    def generate_inner(self, message, dataset=None, capability="query"):
+    def generate_inner(self, message, dataset=None):
         """
         Generate an answer for the given message using the specified capability.
         
@@ -155,7 +157,8 @@ class Moondream2(BaseModel):
         """
         prompt, img = self.message_to_promptimg(message)
         enc_image = self.model.encode_image(Image.open(img))
-        
+        capability = self.capability
+
         if capability == "point":
             return len(self.model.point(enc_image, prompt)["points"])
         elif capability == "query":
@@ -198,7 +201,7 @@ class Moondream2(BaseModel):
         tgt_path = self.dump_image(line, dataset)
         question = line["question"]
 
-        capability = "point" # Change this to "point" if you want to test point capabilities.
+        capability = self.capability # Default capability = "query", change to "point" if needed.
 
         prompts = {
             "ChartQA_TEST": f"Analyze the chart carefully, consider both visual features and data values, and provide a precise answer without any additional explanation or formatting. {question}",
