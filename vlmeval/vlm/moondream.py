@@ -121,8 +121,8 @@ class Moondream2(BaseModel):
         try:
             import transformers
             from transformers import AutoModelForCausalLM, AutoTokenizer
-            if transformers.__version__ != '4.44.0':
-                raise ImportError("Transformers 4.44.0 required")
+            if transformers.__version__ < '4.44.0':
+                raise ImportError("Transformers 4.44.0 or greater required")
         except ImportError:
             logging.critical("Install transformers==4.44.0 and torchvision>=0.16")
             raise

@@ -33,7 +33,7 @@ timm
 torch
 torchvision
 tqdm
-transformers==4.44.0
+transformers
 typing_extensions
 validators
 xlsxwriter
