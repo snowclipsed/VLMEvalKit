@@ -88,8 +88,6 @@ class BaseModel:
             for item in inputs:
                 assert 'type' in item and 'value' in item
                 mime, s = parse_file(item['value'])
-
-                    
                 if mime is None:
                     assert item['type'] == 'text'
                 else:

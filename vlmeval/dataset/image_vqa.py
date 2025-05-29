@@ -2549,11 +2549,11 @@ class CountbenchQA(ImageBaseDataset):
 
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
-        from .utils.countbenchqa import safe_convert # This only counts from 0 to 20.
+        from .utils.countbenchqa import extract_count_from_prediction
         
         data = load(eval_file)
 
-        pred_ints = data["prediction"].apply(safe_convert)
+        pred_ints = data["prediction"].apply(extract_count_from_prediction)
         answer_ints = data["answer"].astype(int)
         
         correct = (pred_ints == answer_ints).sum()
@@ -2579,11 +2579,11 @@ class TallyQA(ImageBaseDataset):
 
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
-        from .utils.countbenchqa import safe_convert
+        from .utils.countbenchqa import extract_count_from_prediction
         
         data = load(eval_file)
         
-        pred_ints = data["prediction"].apply(safe_convert)
+        pred_ints = data["prediction"].apply(extract_count_from_prediction)
         answer_ints = data["answer"].astype(int)
         
         correct = (pred_ints == answer_ints).sum()
