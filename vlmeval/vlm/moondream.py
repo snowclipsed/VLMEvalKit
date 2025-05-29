@@ -111,8 +111,7 @@ class Moondream2(BaseModel):
     INTERLEAVE = False
 
     def __init__(
-        self, model_path="vikhyatk/moondream2", revision=None, local_path=None, **kwargs
-    ):
+        self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
         try:
             import transformers
             from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -126,10 +125,11 @@ class Moondream2(BaseModel):
         assert osp.exists(model_path) or splitlen(model_path) == 2
 
         self.model = AutoModelForCausalLM.from_pretrained(
-            "moondream/moondream-2b-2025-04-14-4bit",
+            model_path,
             trust_remote_code=True,
             torch_dtype=torch.float16,
             device_map={"": "cuda"},
+            revision=revision,
         )
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -198,7 +198,7 @@ class Moondream2(BaseModel):
         tgt_path = self.dump_image(line, dataset)
         question = line["question"]
 
-        capability = "query" # Change this to "point" if you want to test point capabilities.
+        capability = "point" # Change this to "point" if you want to test point capabilities.
 
         prompts = {
             "ChartQA_TEST": f"Analyze the chart carefully, consider both visual features and data values, and provide a precise answer without any additional explanation or formatting. {question}",
@@ -208,13 +208,15 @@ class Moondream2(BaseModel):
             "TallyQA": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
             "CountbenchQA_query": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
             "CountbenchQA_point": f"individual {extract_object(question)}",
-            "RealWorldQA": f"Look at the image carefully and answer the question. Provide a brief answer without any additional text. {question}",
             "MMVet": f"{question}\nAnswer the question directly.",
         }
 
         if dataset == "CountbenchQA":
             prompt_key = f"CountbenchQA_{capability}"
-            prompt = prompts.get(prompt_key, prompts.get("CountbenchQA_query"))
+            if prompt_key in prompts:
+                prompt = prompts[prompt_key]
+            else:
+                raise ValueError(f"No prompt defined for capability '{capability}' in dataset '{dataset}'.")
         elif dataset in prompts:
             prompt = prompts[dataset]
         elif DATASET_TYPE(dataset) == "MCQ":
