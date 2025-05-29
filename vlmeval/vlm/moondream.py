@@ -112,16 +112,13 @@ class Moondream2(BaseModel):
 
     def __init__(
         self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
-        try:
-            import transformers
-            from transformers import AutoModelForCausalLM, AutoTokenizer
+        
+        import transformers
+        import torchvision
+        assert transformers.__version__ >= "4.44.0", f"Transformers 4.44.0 or greater required, found {transformers.__version__}"
+        assert torchvision.__version__ >= "0.16", f"Torchvision 0.16 or greater required, found {torchvision.__version__}"
 
-            if transformers.__version__ < "4.44.0":
-                raise ImportError("Transformers 4.44.0 or greater required")
-        except ImportError:
-            logging.critical("Install transformers==4.44.0 and torchvision>=0.16")
-            raise
-
+        from transformers import AutoModelForCausalLM, AutoTokenizer
         assert osp.exists(model_path) or splitlen(model_path) == 2
 
         self.model = AutoModelForCausalLM.from_pretrained(
