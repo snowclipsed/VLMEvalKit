@@ -2540,12 +2540,12 @@ class PhyX(ImageBaseDataset):
             return score
 
 
-class CountbenchQA(ImageBaseDataset):
+class CountBenchQA(ImageBaseDataset):
     TYPE = "VQA"
     DATASET_URL = {
-        "CountbenchQA": "https://huggingface.co/datasets/moondream/CountBenchQA-VLMEvalKit/resolve/main/countbench_data.tsv"
+        "CountBenchQA": "https://huggingface.co/datasets/moondream/CountBenchQA-VLMEvalKit/resolve/main/countbench_data.tsv"
     }
-    DATASET_MD5 = {"CountbenchQA": "d70123bd9d7c090b00101f2116f3a7c6"}
+    DATASET_MD5 = {"CountBenchQA": "d70123bd9d7c090b00101f2116f3a7c6"}
 
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
@@ -2560,7 +2560,7 @@ class CountbenchQA(ImageBaseDataset):
         total = len(data)
         accuracy = correct / total
         
-        result_df = pd.DataFrame([{"CountbenchQA": accuracy}])
+        result_df = pd.DataFrame([{"CountBenchQA": accuracy}])
         result_file = eval_file.replace(f".{eval_file.split('.')[-1]}", "_acc.csv")
         dump(result_df, result_file)
         return result_df

@@ -187,7 +187,7 @@ class Moondream2(BaseModel):
             "POPE",
             "RealWorldQA",
             "TallyQA",
-            "CountbenchQA",
+            "CountBenchQA",
             "MMVet",
         ]:
             return True
@@ -209,13 +209,13 @@ class Moondream2(BaseModel):
             "DocVQA_VAL": f"{question} The answer should be a short text span taken verbatim from the document.",
             "POPE": f"{question}\nAnswer yes or no.",
             "TallyQA": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
-            "CountbenchQA_query": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
-            "CountbenchQA_point": f"individual {extract_object(question)}",
+            "CountBenchQA_query": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
+            "CountBenchQA_point": f"individual {extract_object(question)}",
             "MMVet": f"{question}\nAnswer the question directly.",
         }
 
-        if dataset == "CountbenchQA":
-            prompt_key = f"CountbenchQA_{capability}"
+        if dataset == "CountBenchQA":
+            prompt_key = f"CountBenchQA_{capability}"
             if prompt_key in prompts:
                 prompt = prompts[prompt_key]
             else:
