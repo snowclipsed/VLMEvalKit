@@ -3,7 +3,6 @@ import os
 import subprocess
 from functools import partial
 
-
 # GET the number of GPUs on the node without importing libs like torch
 def get_gpu_list():
     CUDA_VISIBLE_DEVICES = os.environ.get('CUDA_VISIBLE_DEVICES', '')
@@ -23,20 +22,6 @@ WORLD_SIZE = int(os.environ.get('WORLD_SIZE', 1))
 LOCAL_WORLD_SIZE = int(os.environ.get("LOCAL_WORLD_SIZE",1))
 LOCAL_RANK = int(os.environ.get("LOCAL_RANK",1))
 
-GPU_LIST = get_gpu_list()
-if LOCAL_WORLD_SIZE > 1 and len(GPU_LIST):
-    NGPU = len(GPU_LIST)
-    assert NGPU >= LOCAL_WORLD_SIZE, "The number of processes should be less than or equal to the number of GPUs"
-    GPU_PER_PROC = NGPU // LOCAL_WORLD_SIZE
-    DEVICE_START_IDX = GPU_PER_PROC * LOCAL_RANK
-    CUDA_VISIBLE_DEVICES = [str(i) for i in GPU_LIST[DEVICE_START_IDX: DEVICE_START_IDX + GPU_PER_PROC]]
-    CUDA_VISIBLE_DEVICES = ','.join(CUDA_VISIBLE_DEVICES)
-    # Set CUDA_VISIBLE_DEVICES
-    os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
-    print(
-        f'RANK: {RANK}, LOCAL_RANK: {LOCAL_RANK}, WORLD_SIZE: {WORLD_SIZE},'
-        f'LOCAL_WORLD_SIZE: {LOCAL_WORLD_SIZE}, CUDA_VISIBLE_DEVICES: {CUDA_VISIBLE_DEVICES}'
-    )
 
 
 from vlmeval.config import supported_VLM
@@ -234,7 +219,11 @@ def main():
                     logger.warning(f'FWD_API is set, will use class `GPT4V` for {m}')
 
     if WORLD_SIZE > 1:
+        local_rank = int(os.environ.get('LOCAL_RANK', 0))
+        import torch
         import torch.distributed as dist
+        torch.cuda.set_device(local_rank)
+        import datetime
         dist.init_process_group(
             backend='nccl',
             timeout=datetime.timedelta(seconds=int(os.environ.get('DIST_TIMEOUT', 3600)))
