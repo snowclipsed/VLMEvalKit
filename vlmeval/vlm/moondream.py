@@ -14,7 +14,7 @@ def extract_object(sentence: str) -> str:
         if word.lower() in {"are", "is"}:
             break
         obj_words.append(word)
-        
+
     return " ".join(obj_words)
 
 class Moondream1(BaseModel):
@@ -112,7 +112,7 @@ class Moondream2(BaseModel):
 
     def __init__(
         self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
-        
+
         import transformers
         import torchvision
         assert transformers.__version__ >= "4.44.0", f"Transformers 4.44.0 or greater required, found {transformers.__version__}"
@@ -131,7 +131,7 @@ class Moondream2(BaseModel):
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-        self.capability = "query"  # Default capability, change to "point" if needed.
+        self.capability = "point"  # Default capability, change to "point" if needed.
 
         self.kwargs = {"max_new_tokens": 512, **kwargs}
 
@@ -143,17 +143,18 @@ class Moondream2(BaseModel):
     def generate_inner(self, message, dataset=None):
         """
         Generate an answer for the given message using the specified capability.
-        
+
         Args:
             message (dict): The message containing the question and image.
             dataset (str): The dataset for which the answer is being generated (optional, for context).
-            
+
         Returns:
             str: The generated answer or count.
         """
         prompt, img = self.message_to_promptimg(message)
         enc_image = self.model.encode_image(Image.open(img))
         capability = self.capability
+        print(f"Prompt: {prompt}")
 
         if capability == "point":
             return len(self.model.point(enc_image, prompt)["points"])
@@ -184,6 +185,7 @@ class Moondream2(BaseModel):
             "RealWorldQA",
             "TallyQA",
             "CountBenchQA",
+            "PixmoCount",
             "MMVet",
         ]:
             return True
@@ -206,12 +208,15 @@ class Moondream2(BaseModel):
             "POPE": f"{question}\nAnswer yes or no.",
             "TallyQA": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
             "CountBenchQA_query": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
+            "PixmoCount_query": f"Look at the image carefully and count the objects. Answer with just a number, without any additional text. {question}",
             "CountBenchQA_point": f"individual {extract_object(question)}",
+            "PixmoCount_point": f"individual {extract_object(question)}",
             "MMVet": f"{question}\nAnswer the question directly.",
         }
 
-        if dataset == "CountBenchQA":
-            prompt_key = f"CountBenchQA_{capability}"
+        if dataset == "CountBenchQA" or dataset == "PixmoCount":
+            prompt_key = f"{dataset}_{capability}"
+            print(f"Using prompt key: {prompt_key} for dataset: {dataset} with capability: {capability}")
             if prompt_key in prompts:
                 prompt = prompts[prompt_key]
             else:
