@@ -113,9 +113,7 @@ class Moondream2(BaseModel):
     def __init__(
         self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
 
-        import transformers
         import torchvision
-        assert transformers.__version__ >= "4.44.0", f"Transformers 4.44.0 or greater required, found {transformers.__version__}"
         assert torchvision.__version__ >= "0.16", f"Torchvision 0.16 or greater required, found {torchvision.__version__}"
 
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -125,9 +123,10 @@ class Moondream2(BaseModel):
             model_path,
             trust_remote_code=True,
             torch_dtype=torch.float16,
-            device_map={"": "cuda"},
             revision=revision,
         )
+
+        self.model = self.model.to("cuda")
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
