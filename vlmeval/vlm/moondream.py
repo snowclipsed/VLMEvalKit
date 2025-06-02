@@ -154,7 +154,6 @@ class Moondream2(BaseModel):
         prompt, img = self.message_to_promptimg(message)
         enc_image = self.model.encode_image(Image.open(img))
         capability = self.capability
-        print(f"Prompt: {prompt}")
 
         if capability == "point":
             return len(self.model.point(enc_image, prompt)["points"])
@@ -216,7 +215,6 @@ class Moondream2(BaseModel):
 
         if dataset == "CountBenchQA" or dataset == "PixmoCount":
             prompt_key = f"{dataset}_{capability}"
-            print(f"Using prompt key: {prompt_key} for dataset: {dataset} with capability: {capability}")
             if prompt_key in prompts:
                 prompt = prompts[prompt_key]
             else:
