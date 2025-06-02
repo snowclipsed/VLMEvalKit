@@ -2279,7 +2279,7 @@ class TDBenchGrounding(ImageVQADataset):
 class CountBenchQA(ImageVQADataset):
     TYPE = "VQA"
     DATASET_URL = {
-        "CountBenchQA": 
+        "CountBenchQA":
         "https://huggingface.co/datasets/moondream/CountBenchQA-VLMEvalKit/resolve/main/countbench_data.tsv"
     }
     DATASET_MD5 = {"CountBenchQA": "d70123bd9d7c090b00101f2116f3a7c6"}
@@ -2575,7 +2575,7 @@ class PhyX(ImageBaseDataset):
 
 class TallyQA(ImageBaseDataset):
     TYPE = 'VQA'
-    DATASET_URL = { 
+    DATASET_URL = {
         'TallyQA': 'https://huggingface.co/datasets/moondream/TallyQA-VLMEvalKit/resolve/main/tallyqa_data.tsv'
     }
     DATASET_MD5 = {'TallyQA': '959df01cf1858e73a71efe5cd3b9bf19'}
@@ -2583,16 +2583,16 @@ class TallyQA(ImageBaseDataset):
     def evaluate(self, eval_file, **judge_kwargs):
         import pandas as pd
         from .utils.tallyqa import extract_count_from_prediction
-        
+
         data = load(eval_file)
-        
+
         pred_ints = data["prediction"].apply(extract_count_from_prediction)
         answer_ints = data["answer"].astype(int)
-        
+
         correct = (pred_ints == answer_ints).sum()
         total = len(data)
         accuracy = correct / total
-        
+
         result_df = pd.DataFrame([{"TallyQA": accuracy}])
         result_file = eval_file.replace(f".{eval_file.split('.')[-1]}", "_acc.csv")
         dump(result_df, result_file)
@@ -2602,3 +2602,35 @@ class TallyQA(ImageBaseDataset):
         msgs = super().build_prompt(line)
         msgs[-1]['value'] += '\nAnswer the question using a single number.'
         return msgs
+
+class PixmoCount(ImageBaseDataset):
+    TYPE = "VQA"
+    DATASET_URL = {
+        "PixmoCount":
+        "https://huggingface.co/datasets/snowclipsed/pixmo-count/resolve/main/pixmo.tsv"
+    }
+    DATASET_MD5 = {"PixmoCount": "32631b26311dca9674ee695c697b49d5"}
+
+    def build_prompt(self, line):
+        if isinstance(line, int):
+            line = self.data.iloc[line]
+        tgt_path = self.dump_image(line)
+        msgs = []
+        msgs.extend([dict(type='image', value=p) for p in tgt_path])
+        ques = line['question']
+        question = f'{ques} \nAnswer the question using a single number.'
+        msgs.append(dict(type='text', value=question))
+        return msgs
+
+    def evaluate(self, eval_file, **judge_kwargs):
+        data = load(eval_file).sort_values(by='index')
+        predictions = [str(x) for x in data['prediction']]
+        answers = [str(x) for x in data['answer']]
+        correct_count = 0
+        total_count = len(predictions)
+
+        for pred, ans in zip(predictions, answers):
+            if ans in pred:
+                correct_count += 1
+        accuracy = correct_count / total_count if total_count > 0 else 0
+        return {'accuracy': accuracy}
