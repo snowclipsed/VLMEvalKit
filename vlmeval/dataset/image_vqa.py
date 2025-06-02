@@ -2607,7 +2607,7 @@ class PixmoCount(ImageBaseDataset):
     TYPE = "VQA"
     DATASET_URL = {
         "PixmoCount":
-        "https://huggingface.co/datasets/snowclipsed/pixmo-count/resolve/main/pixmo.tsv"
+        "https://huggingface.co/datasets/moondream/pixmo-points-VLMEvalKit/resolve/main/pixmo.tsv"
     }
     DATASET_MD5 = {"PixmoCount": "32631b26311dca9674ee695c697b49d5"}
 
