@@ -1,3 +1,27 @@
+# NOTE: 
+
+Please make sure to change the capability flag in [moondream.py](vlmeval/vlm/moondream.py) accordingly (if you wanna use query or point).
+
+This is cause there are datasets which expect point (like CountBenchQA or PixmoCount).
+
+Default capability is QUERY.
+
+```py
+class Moondream2(BaseModel):
+    INSTALL_REQ = False
+    INTERLEAVE = False
+
+    def __init__(
+        self, model_path="vikhyatk/moondream2", revision=None, **kwargs):
+        ...
+        ...
+
+        self.capability = "query"  # Default capability, change to "point" if needed.**
+
+        ...
+        ...
+```
+
 ![LOGO](http://opencompass.openxlab.space/utils/MMLB.jpg)
 
 <b>A Toolkit for Evaluating Large Vision-Language Models. </b>
