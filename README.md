@@ -1,4 +1,4 @@
-# NOTE: 
+## NOTE: 
 
 Please make sure to change the capability flag in [moondream.py](vlmeval/vlm/moondream.py) accordingly (if you wanna use query or point).
 
